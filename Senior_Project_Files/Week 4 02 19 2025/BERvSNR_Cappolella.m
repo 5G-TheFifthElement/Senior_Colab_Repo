@@ -2,7 +2,8 @@
 total_bits = 1000000;         % Total bits to simulate    
 power = 1e-7;                  % Signal power at the receiver
 voltage = sqrt(power);         % Voltage for signal mapping 0,1
-threshold = voltage / 2;  % Detection threshold for the signal
+threshold = voltage;  % Detection threshold for the signal
+amp = voltage;
 
 % SNR values
 SNR_dB_values = 10:2:20; % SNR from 10 to 20 dB in steps of 2
@@ -27,13 +28,25 @@ for snr_db = SNR_dB_values
     transmitted_signal = bits * voltage;
     
     % Generate AWGN noise
-    noise = normrnd(0, sqrt(noise_variance), 1, total_bits);
+    noise_real = (1/sqrt(2)) * normrnd(0, sqrt(noise_variance), 1, total_bits);
+    noise_imag = (1/sqrt(2)) * normrnd(0, sqrt(noise_variance), 1, total_bits);
+    noise = noise_real + 1j * noise_imag;
+
+    % Generate channel coefficient and channel coefficient noise
+    chan_coeff = normrnd(0, sqrt(noise_variance), 1, total_bits);
+    chan_coeff_noise = normrnd(0, sqrt(noise_variance), 1, total_bits);
     
-    % Received signal for 0,1 mapping
+    % h value (amplitude)
+    % amp = sqrt(snr_linear);
+   
+
+    % Received signal including estimated channel coefficient (y = hx + n)
     received_signal = transmitted_signal + noise;
-    
+    %est_chan_coeff = chan_coeff + (.0000000001 * chan_coeff_noise);
+    received_signal_real = real(received_signal);
+
     % Decode received bits using the defined threshold
-    decoded_bits = double(received_signal >= threshold);
+    decoded_bits = double(received_signal_real >= threshold);
     
     % Compute BER for 0,1 mapping
     ber = [ber, sum(decoded_bits ~= bits) / total_bits];
@@ -69,7 +82,7 @@ title(['BER vs SNR for ', num2str(total_bits), ' bits']);
 grid on;
 legend;
 
-
+%{
 figure;
 semilogy(SNR_dB_values, ber_BPSK, 'o-', 'DisplayName', 'BPSK Mapping (0 -> +1, 1 -> -1)');
 xlim([10, 20]);
@@ -78,3 +91,4 @@ ylabel('Bit Error Rate (BER)');
 title(['BPSK BER vs SNR for ', num2str(total_bits), ' bits']);
 grid on;
 legend;
+%}
