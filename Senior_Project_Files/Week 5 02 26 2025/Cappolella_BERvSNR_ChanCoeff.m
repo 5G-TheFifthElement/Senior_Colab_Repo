@@ -42,6 +42,8 @@ for snr_db = SNR_dB_values
     % Decode received bits
     received_signal_real = real(received_signal_BPSK / estimated_coeff);
     decoded_bits_BPSK = double(received_signal_real < 0);
+    % decoded_bits_BPSK = double(real(received_signal_BPSK < 0));
+
     
     % Compute BER
     current_ber = sum(decoded_bits_BPSK ~= bits) / total_bits;
